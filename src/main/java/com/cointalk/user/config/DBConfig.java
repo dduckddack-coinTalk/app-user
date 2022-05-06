@@ -15,7 +15,7 @@ public class DBConfig {
     public ConnectionFactoryInitializer initializer(ConnectionFactory connectionFactory) {
         var initializer = new ConnectionFactoryInitializer();
         initializer.setConnectionFactory(connectionFactory);
-
+        initializer.setDatabasePopulator(new ResourceDatabasePopulator(new ClassPathResource("user.sql")));
         return initializer;
     }
 }

@@ -1,5 +1,7 @@
 package com.cointalk.user.config;
 
+import com.cointalk.user.User;
+import com.cointalk.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -12,10 +14,21 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Configuration
 public class UserRouterConfig {
 
+    private final UserRepository userRepository;
+
+    public UserRouterConfig(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @Bean
     public RouterFunction<ServerResponse> userRouter() {
         return route().nest(path("/user"), builder -> {
-            builder.GET("/test", (req) -> ServerResponse.ok().body(Mono.just("hello user!"), String.class));
+            builder
+                    .GET("/test", (req) -> ServerResponse.ok().body(Mono.just("hello user!"), String.class))
+                    .GET("/email/{email}", (req) -> {
+                        String email = req.pathVariable("email");
+                        return ServerResponse.ok().body(userRepository.findByEmail(email),User.class);
+                    });
         }).build();
     }
 }
