@@ -411,3 +411,4 @@ out/
 ### VS Code ###
 .vscode/
 
+application.properties
