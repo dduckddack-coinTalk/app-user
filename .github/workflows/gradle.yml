@@ -9,9 +9,9 @@ name: app-user
 
 on:
   push:
-    branches: [main, chore/github-action-deploy]
-  pull_request:
     branches: [main]
+  pull_request:
+    branches: []
 
 permissions:
   contents: read
