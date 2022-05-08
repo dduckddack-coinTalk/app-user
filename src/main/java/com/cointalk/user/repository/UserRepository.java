@@ -1,5 +1,6 @@
-package com.cointalk.user;
+package com.cointalk.user.repository;
 
+import com.cointalk.user.entity.User;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
