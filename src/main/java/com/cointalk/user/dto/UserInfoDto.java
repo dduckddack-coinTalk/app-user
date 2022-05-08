@@ -1,6 +1,6 @@
 package com.cointalk.user.dto;
 
-import com.cointalk.user.modal.UserInfo;
+import com.cointalk.user.model.UserInfo;
 import lombok.Data;
 
 
