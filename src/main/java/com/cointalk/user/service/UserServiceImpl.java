@@ -17,6 +17,10 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    public Mono<Integer> updateUser(User user) {
+        return userRepository.updateUser(user.getPassword(), user.getNickName(), user.getEmail());
+    }
+
     @Override
     public Mono<User> getUser(String email) {
         return userRepository.findByEmail(email);

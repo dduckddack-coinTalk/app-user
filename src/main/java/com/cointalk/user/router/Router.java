@@ -24,6 +24,7 @@ public class Router {
                     .GET("/test", userHandler::test)
                     .GET("/email/{email}", userHandler::getUserByEmail)
                     .POST("/account", userHandler::createAccount)
+                    .PUT("/account",userHandler::updateAccount)
             ;
         }).build();
     }

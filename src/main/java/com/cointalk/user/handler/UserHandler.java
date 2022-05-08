@@ -26,14 +26,26 @@ public class UserHandler {
         return ok().body(userService.getUser(email), User.class);
     }
 
-
     public Mono<ServerResponse> createAccount(ServerRequest request) {
-
         Mono<ResponseDto> resultMono = request.bodyToMono(User.class)
                 .flatMap(userService::createUser)
                 .map(o -> new ResponseDto("ok", "유저 생성 성공"))
-                .onErrorReturn(new ResponseDto("error", "유저 생성 실패"))
-                ;
+                .onErrorReturn(new ResponseDto("error", "유저 생성 실패"));
+
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(resultMono, ResponseDto.class);
+    }
+
+    public Mono<ServerResponse> updateAccount(ServerRequest request) {
+        Mono<ResponseDto> resultMono = request.bodyToMono(User.class)
+                .flatMap(userService::updateUser)
+                .map(o -> {
+                    if (o == 0) {
+                        return new ResponseDto("error", "유저 변경 실패");
+                    } else {
+                        return new ResponseDto("ok", "유저 변경 성공");
+                    }
+                })
+                .onErrorReturn(new ResponseDto("error", "유저 변경 실패"));
 
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(resultMono, ResponseDto.class);
     }
