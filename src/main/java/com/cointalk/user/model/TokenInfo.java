@@ -16,7 +16,7 @@ public class TokenInfo {
     }
 
     public static TokenInfo create(Claims tokenClaims) {
-        long id = (long) tokenClaims.get("id");
+        long id =  Long.parseLong(tokenClaims.get("id").toString());
         String email= tokenClaims.get("email").toString();
         String nickName =  tokenClaims.get("nickName").toString();
 
