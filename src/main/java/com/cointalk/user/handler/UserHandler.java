@@ -1,5 +1,7 @@
 package com.cointalk.user.handler;
 
+import com.cointalk.user.config.JwtProvider;
+import com.cointalk.user.dto.LoginResponseDto;
 import com.cointalk.user.dto.ResponseDto;
 import com.cointalk.user.entity.User;
 import com.cointalk.user.model.LoginUser;
@@ -16,6 +18,8 @@ import static org.springframework.web.reactive.function.server.ServerResponse.ok
 @RequiredArgsConstructor
 @Component
 public class UserHandler {
+
+    private final JwtProvider jwtProvider;
     private final UserService userService;
 
     public Mono<ServerResponse> test(ServerRequest request) {
@@ -52,16 +56,17 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> login(ServerRequest request) {
-        var result = request.bodyToMono(LoginUser.class)
+        Mono<ResponseDto> loginResultMono = request.bodyToMono(LoginUser.class)
                 .flatMap(userService::login)
-                .hasElement()
-                .map(isSuccess -> {
-                    if(isSuccess) {
-                        return new ResponseDto("ok", "유저 로그인 성공");
-                    }
-                    return new ResponseDto("error", "유저 로그인 실패");
-                });
+                .map(this::makeLoginResponse)
+                .switchIfEmpty(Mono.just(new ResponseDto("error", "유저 로그인 실패")));
 
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(result, ResponseDto.class);
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(loginResultMono, ResponseDto.class);
+    }
+
+    public ResponseDto makeLoginResponse(User user) {
+        String accessToken = jwtProvider.generateAccessToken(user);
+        String refreshToken = jwtProvider.generateRefreshToken(user);
+        return new LoginResponseDto("ok", "유저 로그인 성공", accessToken, refreshToken);
     }
 }
