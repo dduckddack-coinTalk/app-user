@@ -1,6 +1,7 @@
 package com.cointalk.user.service;
 
 import com.cointalk.user.entity.User;
+import com.cointalk.user.model.LoginUser;
 import com.cointalk.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,11 @@ public class UserServiceImpl implements UserService {
 
     public Mono<Integer> updateUser(User user) {
         return userRepository.updateUser(user.getPassword(), user.getNickName(), user.getEmail());
+    }
+
+    @Override
+    public Mono<User> login(LoginUser user) {
+        return userRepository.findByEmailAndPassword(user.getEmail(), user.getPassword());
     }
 
     @Override

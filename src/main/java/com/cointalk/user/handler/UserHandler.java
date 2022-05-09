@@ -2,6 +2,7 @@ package com.cointalk.user.handler;
 
 import com.cointalk.user.dto.ResponseDto;
 import com.cointalk.user.entity.User;
+import com.cointalk.user.model.LoginUser;
 import com.cointalk.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -48,5 +49,19 @@ public class UserHandler {
                 .onErrorReturn(new ResponseDto("error", "유저 변경 실패"));
 
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(resultMono, ResponseDto.class);
+    }
+
+    public Mono<ServerResponse> login(ServerRequest request) {
+        var result = request.bodyToMono(LoginUser.class)
+                .flatMap(userService::login)
+                .hasElement()
+                .map(isSuccess -> {
+                    if(isSuccess) {
+                        return new ResponseDto("ok", "유저 로그인 성공");
+                    }
+                    return new ResponseDto("error", "유저 로그인 실패");
+                });
+
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(result, ResponseDto.class);
     }
 }

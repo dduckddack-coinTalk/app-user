@@ -10,10 +10,13 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface UserRepository extends ReactiveCrudRepository<User, Integer> {
-    @Query("SELECT * FROM user where email = :email")
+
     Mono<User> findByEmail(String email);
+
+    Mono<User> findByEmailAndPassword(String email, String password);
 
     @Modifying
     @Query("UPDATE user SET password = :password , nick_name = :nickName WHERE email = :email")
     Mono<Integer> updateUser(String password, String nickName, String email);
+
 }
