@@ -1,11 +1,9 @@
 package com.cointalk.user.service;
 
-import com.cointalk.user.config.JwtProvider;
 import com.cointalk.user.entity.User;
-import com.cointalk.user.model.LoginUser;
 import com.cointalk.user.repository.UserRepository;
+import com.cointalk.user.util.Encryption;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -13,23 +11,21 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private JwtProvider jwtProvider;
-
     private final UserRepository userRepository;
-
 
     public Mono<User> createUser(User user) {
         return userRepository.save(user);
     }
 
     public Mono<Integer> updateUser(User user) {
-        return userRepository.updateUser(user.getPassword(), user.getNickName(), user.getEmail());
+        String password = Encryption.encrypt(user.getPassword());
+        return userRepository.updateUser(password, user.getNickName(), user.getEmail());
     }
 
     @Override
-    public Mono<User> login(LoginUser user) {
-        return userRepository.findByEmailAndPassword(user.getEmail(), user.getPassword());
+    public Mono<User> login(User user) {
+        String password = Encryption.encrypt(user.getPassword());
+        return userRepository.findByEmailAndPassword(user.getEmail(), password);
     }
 
     @Override

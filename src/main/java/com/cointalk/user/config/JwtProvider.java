@@ -2,6 +2,7 @@ package com.cointalk.user.config;
 
 import com.cointalk.user.entity.User;
 import com.cointalk.user.model.TokenInfo;
+import com.cointalk.user.model.UserInfo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
