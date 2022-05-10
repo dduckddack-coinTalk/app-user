@@ -14,6 +14,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     public Mono<User> createUser(User user) {
+        user.setPassword(Encryption.encrypt(user.getPassword()));
         return userRepository.save(user);
     }
 
