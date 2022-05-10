@@ -4,7 +4,6 @@ import com.cointalk.user.config.JwtProvider;
 import com.cointalk.user.dto.LoginResponseDto;
 import com.cointalk.user.dto.ResponseDto;
 import com.cointalk.user.entity.User;
-import com.cointalk.user.model.LoginUser;
 import com.cointalk.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -46,11 +45,11 @@ public class UserHandler {
 
         return request.bodyToMono(User.class)
                 .flatMap(user -> userService.updateUser(user).flatMap(o -> {
-                    return makeLoginResponse(user, o, jwt);
+                    return makeUpdateResponse(user, o, jwt);
                 }));
     }
 
-    public Mono<ServerResponse> makeLoginResponse(User user, Integer updateCount, String existedJwt) {
+    public Mono<ServerResponse> makeUpdateResponse(User user, Integer updateCount, String existedJwt) {
         if (updateCount == 1) {
             return ok().contentType(MediaType.APPLICATION_JSON)
                     .header("Authorization", jwtProvider.generateAccessToken(user))
@@ -64,7 +63,7 @@ public class UserHandler {
 
 
     public Mono<ServerResponse> login(ServerRequest request) {
-        Mono<ResponseDto> loginResultMono = request.bodyToMono(LoginUser.class)
+        Mono<ResponseDto> loginResultMono = request.bodyToMono(User.class)
                 .flatMap(userService::login)
                 .map(this::makeLoginResponse)
                 .switchIfEmpty(Mono.just(new ResponseDto("error", "유저 로그인 실패")));
