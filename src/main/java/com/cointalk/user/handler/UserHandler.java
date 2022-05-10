@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import static org.springframework.web.reactive.function.server.ServerResponse.badRequest;
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 
 @RequiredArgsConstructor
@@ -41,19 +42,26 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> updateAccount(ServerRequest request) {
-        Mono<ResponseDto> resultMono = request.bodyToMono(User.class)
-                .flatMap(userService::updateUser)
-                .map(o -> {
-                    if (o == 0) {
-                        return new ResponseDto("error", "유저 변경 실패");
-                    } else {
-                        return new ResponseDto("ok", "유저 변경 성공");
-                    }
-                })
-                .onErrorReturn(new ResponseDto("error", "유저 변경 실패"));
+        String jwt = request.headers().firstHeader("Authorization");
 
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(resultMono, ResponseDto.class);
+        return request.bodyToMono(User.class)
+                .flatMap(user -> userService.updateUser(user).flatMap(o -> {
+                    return makeLoginResponse(user, o, jwt);
+                }));
     }
+
+    public Mono<ServerResponse> makeLoginResponse(User user, Integer updateCount, String existedJwt) {
+        if (updateCount == 1) {
+            return ok().contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", jwtProvider.generateAccessToken(user))
+                    .body(Mono.just(new ResponseDto("ok", "유저 변경 성공")), ResponseDto.class);
+        } else {
+            return badRequest().contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", existedJwt)
+                    .body(Mono.just(new ResponseDto("error", "유저 변경 실패")), ResponseDto.class);
+        }
+    }
+
 
     public Mono<ServerResponse> login(ServerRequest request) {
         Mono<ResponseDto> loginResultMono = request.bodyToMono(LoginUser.class)
