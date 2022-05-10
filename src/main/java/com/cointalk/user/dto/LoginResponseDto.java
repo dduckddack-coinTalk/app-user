@@ -1,8 +1,10 @@
 package com.cointalk.user.dto;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@ToString
 public class LoginResponseDto extends ResponseDto{
 
     private String accessToken;
