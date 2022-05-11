@@ -4,6 +4,7 @@ import com.cointalk.user.config.JwtProvider;
 import com.cointalk.user.dto.LoginResponseDto;
 import com.cointalk.user.dto.ResponseDto;
 import com.cointalk.user.entity.User;
+import com.cointalk.user.service.EmailService;
 import com.cointalk.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ public class UserHandler {
 
     private final JwtProvider jwtProvider;
     private final UserService userService;
+    private final EmailService sendEmailService;
 
     public Mono<ServerResponse> test(ServerRequest request) {
         return ok().body(Mono.just("hello user"), String.class);
@@ -29,6 +31,18 @@ public class UserHandler {
     public Mono<ServerResponse> getUserByEmail(ServerRequest request) {
         String email = request.pathVariable("email");
         return ok().body(userService.getUser(email), User.class);
+    }
+
+    public Mono<ServerResponse> emailAuthentication(ServerRequest request) {
+        String email = request.pathVariable("email");
+//        return ok().body(Mono.just(sendEmailService.sendEmail(email, "test subject", "test body")), boolean.class);
+        return ok().body(Mono.just(sendEmailService.sendEmail(email, "test subject", "test body"))
+                        .map(isSuccess -> {
+                            String status = isSuccess ? "ok" : "error";
+                            String message = isSuccess ? "유저 인증 메일 발송 성공" : "유저 인증 메일 발송 실패";
+                            return new ResponseDto(status, message);
+                        })
+                , ResponseDto.class);
     }
 
     public Mono<ServerResponse> createAccount(ServerRequest request) {

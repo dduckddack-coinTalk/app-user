@@ -26,6 +26,7 @@ public class Router {
                     .POST("/account", userHandler::createAccount)
                     .PUT("/account",userHandler::updateAccount)
                     .POST("/login", userHandler::login)
+                    .POST("/email/{email}/authentication", userHandler::emailAuthentication)
             ;
         }).build();
     }
