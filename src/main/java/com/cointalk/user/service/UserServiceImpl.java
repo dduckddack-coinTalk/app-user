@@ -33,4 +33,10 @@ public class UserServiceImpl implements UserService {
     public Mono<User> getUser(String email) {
         return userRepository.findByEmail(email);
     }
+
+    @Override
+    public Mono<String> userEmailAuthentication(String email){
+        return Mono.just(email + " 인증 완료 되었습니다.");
+    };
+
 }

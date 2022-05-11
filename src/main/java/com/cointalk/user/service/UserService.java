@@ -11,4 +11,6 @@ public interface UserService {
     Mono<Integer> updateUser(User user);
 
     Mono<User> login(User user);
+
+    Mono<String> userEmailAuthentication(String email);
 }
