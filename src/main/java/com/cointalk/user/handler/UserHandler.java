@@ -33,10 +33,16 @@ public class UserHandler {
         return ok().body(userService.getUser(email), User.class);
     }
 
+    public Mono<ServerResponse> confirmEmailAuthentication(ServerRequest request) {
+        String email = request.pathVariable("email");
+        return ok().body(userService.userEmailAuthentication(email), String.class);
+    }
+
     public Mono<ServerResponse> emailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
-//        return ok().body(Mono.just(sendEmailService.sendEmail(email, "test subject", "test body")), boolean.class);
-        return ok().body(Mono.just(sendEmailService.sendEmail(email, "test subject", "test body"))
+        String authUrl = sendEmailService.generateAuthUrl(sendEmailService.getHostPath(request), email);
+        String authMailBody = sendEmailService.generateAuthenticationEmailBody(authUrl);
+        return ok().body(Mono.just(sendEmailService.sendEmail(email, email + " 인증 메일", authMailBody))
                         .map(isSuccess -> {
                             String status = isSuccess ? "ok" : "error";
                             String message = isSuccess ? "유저 인증 메일 발송 성공" : "유저 인증 메일 발송 실패";
