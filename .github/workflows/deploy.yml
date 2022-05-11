@@ -45,7 +45,13 @@ jobs:
           echo spring.r2dbc.password=${{ secrets.MYSQL_PASSWORD }} >> ./src/main/resources/application.properties
           echo secret=${{ secrets.TOKEN_SECRET }} >> ./src/main/resources/application.properties
           echo accessExpire=${{ secrets.TOKEN_ACCESSEXPIRE }} >> ./src/main/resources/application.properties
-          echo refreshExpire=${{ secrets.TOKEN_REFRESHEXPIRE }} >> ./src/main/resources/application.properties
+          echo refreshExpire=${{ secrets.TOKEN_REFRESHEXPIRE }} >> ./src/main/resources/application.properties          
+          echo spring.mail.host=smtp.gmail.com >> ./src/main/resources/application.properties
+          echo spring.mail.port=587 >> ./src/main/resources/application.properties
+          echo spring.mail.username=${{ secrets.MAIL_USERNAME }} >> ./src/main/resources/application.properties
+          echo spring.mail.password=${{ secrets.MAIL_PASSWORD }} >> ./src/main/resources/application.properties
+          echo spring.mail.properties.mail.smtp.auth=true >> ./src/main/resources/application.properties
+          echo spring.mail.properties.mail.smtp.starttls.enable=true >> ./src/main/resources/application.properties
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
