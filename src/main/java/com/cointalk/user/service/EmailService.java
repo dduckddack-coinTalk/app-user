@@ -1,6 +1,5 @@
 package com.cointalk.user.service;
 
-import com.cointalk.user.dto.MailDto;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
