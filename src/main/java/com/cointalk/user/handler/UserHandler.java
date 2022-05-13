@@ -40,18 +40,13 @@ public class UserHandler {
 
     public Mono<ServerResponse> emailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
-        String authUrl = sendEmailService.generateAuthUrl(sendEmailService.getHostPath(request), email);
-        String authMailBody = sendEmailService.generateAuthenticationEmailBody(authUrl);
-        return ok().body(Mono.just(sendEmailService.sendEmail(email, email + " 인증 메일", authMailBody))
-                        .map(isSuccess -> {
-                            String status = isSuccess ? "ok" : "error";
-                            String message = isSuccess ? "유저 인증 메일 발송 성공" : "유저 인증 메일 발송 실패";
-                            return new ResponseDto(status, message);
-                        })
-                , ResponseDto.class);
+        String authUrl = sendEmailService.generateAuthUrl(request, email);
+        return userService.emailAuthentication(authUrl, email).flatMap(result -> {
+            return ok().body(Mono.just(result), ResponseDto.class);
+        });
     }
 
-    public Mono<ServerResponse> createAccount(ServerRequest request) {
+    public Mono<Ser일verResponse> createAccount(ServerRequest request) {
         Mono<ResponseDto> resultMono = request.bodyToMono(User.class)
                 .flatMap(userService::createUser)
                 .map(o -> new ResponseDto("ok", "유저 생성 성공"))
@@ -80,7 +75,6 @@ public class UserHandler {
                     .body(Mono.just(new ResponseDto("error", "유저 변경 실패")), ResponseDto.class);
         }
     }
-
 
     public Mono<ServerResponse> login(ServerRequest request) {
         Mono<ResponseDto> loginResultMono = request.bodyToMono(User.class)
