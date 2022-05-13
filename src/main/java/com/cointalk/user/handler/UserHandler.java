@@ -46,7 +46,7 @@ public class UserHandler {
         });
     }
 
-    public Mono<Ser일verResponse> createAccount(ServerRequest request) {
+    public Mono<ServerResponse> createAccount(ServerRequest request) {
         Mono<ResponseDto> resultMono = request.bodyToMono(User.class)
                 .flatMap(userService::createUser)
                 .map(o -> new ResponseDto("ok", "유저 생성 성공"))
