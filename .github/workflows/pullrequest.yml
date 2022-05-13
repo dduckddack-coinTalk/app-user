@@ -1,0 +1,53 @@
+
+
+name: pull-request-push
+
+
+on:
+  push:
+    branches: [chore/*, feature/*]
+  pull_request:
+    branches: [chore/*, feature/*]
+
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: "11"
+          distribution: "temurin"
+
+      - name: Setup MySQL
+        uses: samin/mysql-action@v1
+        with:
+          mysql version: "8.0"
+          mysql database: ${{ secrets.MYSQL_DATABASE }}
+          mysql user: ${{ secrets.MYSQL_USER }}
+          mysql password: ${{ secrets.MYSQL_PASSWORD }}
+
+      - name: Set r2dbc setting
+        run: |
+          touch ./src/main/resources/application.properties
+          echo spring.r2dbc.url=r2dbc:mysql://localhost:3306/${{ secrets.MYSQL_DATABASE }}?characterEncoding=utf8 >> ./src/main/resources/application.properties
+          echo spring.r2dbc.username=${{ secrets.MYSQL_USER }} >> ./src/main/resources/application.properties
+          echo spring.r2dbc.password=${{ secrets.MYSQL_PASSWORD }} >> ./src/main/resources/application.properties
+          echo secret=${{ secrets.TOKEN_SECRET }} >> ./src/main/resources/application.properties
+          echo accessExpire=${{ secrets.TOKEN_ACCESSEXPIRE }} >> ./src/main/resources/application.properties
+          echo refreshExpire=${{ secrets.TOKEN_REFRESHEXPIRE }} >> ./src/main/resources/application.properties
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
+        with:
+          arguments: build
