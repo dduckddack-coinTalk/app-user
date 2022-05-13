@@ -20,6 +20,11 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    public boolean sendEmailAuthentication(String authUrl, String email) {
+        String authMailBody = generateAuthenticationEmailBody(authUrl);
+        return sendEmail(email, email + " 인증 메일", authMailBody);
+    }
+
     public boolean sendEmail(String toAddress, String subject, String body) {
         log.info("보낼 주소 : " + toAddress);
 
@@ -52,6 +57,11 @@ public class EmailService {
     }
 
     public String generateAuthUrl(String hostPath, String email) {
+        return hostPath + "/user/email/" + email + "/authentication/confirm";
+    }
+
+    public String generateAuthUrl(ServerRequest request, String email) {
+        String hostPath = getHostPath(request);
         return hostPath + "/user/email/" + email + "/authentication/confirm";
     }
 }
