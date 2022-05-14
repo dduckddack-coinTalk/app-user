@@ -23,6 +23,9 @@ public class Router {
             builder
                     .GET("/test", userHandler::test)
                     .GET("/email/{email}", userHandler::getUserByEmail)
+                    .GET("/email/{email}/authentication", userHandler::getEmailAuthentication)
+                    .POST("/email/{email}/authentication", userHandler::emailAuthentication)
+                    .GET("/email/{email}/authentication/confirm", userHandler::confirmEmailAuthentication)
                     .POST("/account", userHandler::createAccount)
                     .PUT("/account",userHandler::updateAccount)
                     .POST("/login", userHandler::login)
