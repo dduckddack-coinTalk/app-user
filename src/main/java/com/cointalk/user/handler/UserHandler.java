@@ -109,6 +109,6 @@ public class UserHandler {
     public ResponseDto makeLoginResponse(User user) {
         String accessToken = jwtProvider.generateAccessToken(user);
         String refreshToken = jwtProvider.generateRefreshToken(user);
-        return new LoginResponseDto("ok", "유저 로그인 성공", accessToken, refreshToken);
+        return new LoginResponseDto("ok", "유저 로그인 성공", accessToken, refreshToken, user);
     }
 }

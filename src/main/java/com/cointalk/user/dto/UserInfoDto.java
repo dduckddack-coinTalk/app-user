@@ -9,5 +9,4 @@ public class UserInfoDto {
     UserInfo result;
     String status;
     String message;
-
 }
