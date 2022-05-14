@@ -28,6 +28,7 @@ public class Router {
                     .GET("/email/{email}/authentication/confirm", userHandler::confirmEmailAuthentication)
                     .POST("/account", userHandler::createAccount)
                     .PUT("/account",userHandler::updateAccount)
+                    .DELETE("/account/{email}", userHandler::deleteAccount)
                     .POST("/login", userHandler::login)
             ;
         }).build();

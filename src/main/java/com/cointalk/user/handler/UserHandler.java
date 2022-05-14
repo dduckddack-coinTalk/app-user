@@ -78,6 +78,13 @@ public class UserHandler {
                 }));
     }
 
+    public Mono<ServerResponse> deleteAccount(ServerRequest request) {
+        String email = request.pathVariable("email");
+        var result = userService.deleteUser(email).map(o -> o == 0 ? "삭제 안 되었습니다." : "삭제 되었습니다.").onErrorReturn("삭제 " +
+                "에러 발생!");
+        return ok().body(result, String.class);
+    }
+
     public Mono<ServerResponse> makeUpdateResponse(User user, Integer updateCount, String existedJwt) {
         if (updateCount == 1) {
             return ok().contentType(MediaType.APPLICATION_JSON)

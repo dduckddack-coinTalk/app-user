@@ -27,6 +27,10 @@ public class UserServiceImpl implements UserService {
         return userRepository.updateUser(password, user.getNickName(), user.getEmail());
     }
 
+    public Mono<Integer> deleteUser(String email) {
+        return userRepository.deleteByEmail(email);
+    }
+
     @Override
     public Mono<User> login(User user) {
         String password = Encryption.encrypt(user.getPassword());
