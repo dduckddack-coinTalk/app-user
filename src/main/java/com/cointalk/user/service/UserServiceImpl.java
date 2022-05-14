@@ -54,8 +54,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<String> userEmailAuthentication(String email){
-        return Mono.just(email + " 인증 완료 되었습니다.");
+    public Mono<String> updateEmailAuthentication(String email) {
+        return userRepository.updateEmailAuthentication(email)
+                .flatMap(result -> Mono.just("인증 완료 되었습니다"))
+                .onErrorReturn("인증이 실패했습니다.");
     }
-
 }

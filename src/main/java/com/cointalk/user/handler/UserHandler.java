@@ -35,18 +35,21 @@ public class UserHandler {
 
     public Mono<ServerResponse> getEmailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
-        var responseDtoMono =
-                userService.getUser(email).map(user -> {
-                            return new ResponseDto("ok", user.getIsAuthentication().toString());
-                        })
-                        .switchIfEmpty(Mono.just(new ResponseDto("error", "등록되지 않은 이메일입니다.")));
+        var responseDtoMono = userService.getUser(email).map(user -> {
+            return new ResponseDto("ok", user.getIsAuthentication().toString());
+        })
+                .switchIfEmpty(Mono.just(new ResponseDto("error", "등록되지 않은 이메일입니다.")));
 
         return ok().body(responseDtoMono, ResponseDto.class);
     }
 
     public Mono<ServerResponse> confirmEmailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
-        return ok().body(userService.userEmailAuthentication(email), String.class);
+        var result = userService.getUser(email)
+                .flatMap(user -> (user.getIsAuthentication()) ? Mono.just("이미 인증된 이메일 입니다.")
+                        : userService.updateEmailAuthentication(email))
+                .switchIfEmpty(Mono.just("등록되지 않은 이메일 입니다."));
+        return ok().body(result, String.class);
     }
 
     public Mono<ServerResponse> emailAuthentication(ServerRequest request) {
