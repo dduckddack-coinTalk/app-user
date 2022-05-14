@@ -33,6 +33,17 @@ public class UserHandler {
         return ok().body(userService.getUser(email), User.class);
     }
 
+    public Mono<ServerResponse> getEmailAuthentication(ServerRequest request) {
+        String email = request.pathVariable("email");
+        var responseDtoMono =
+                userService.getUser(email).map(user -> {
+                            return new ResponseDto("ok", user.getIsAuthentication().toString());
+                        })
+                        .switchIfEmpty(Mono.just(new ResponseDto("error", "등록되지 않은 이메일입니다.")));
+
+        return ok().body(responseDtoMono, ResponseDto.class);
+    }
+
     public Mono<ServerResponse> confirmEmailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
         return ok().body(userService.userEmailAuthentication(email), String.class);
