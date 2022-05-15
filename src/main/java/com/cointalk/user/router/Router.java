@@ -31,7 +31,7 @@ public class Router {
                     .PUT("/account", userHandler::updateAccount)
                     .DELETE("/account/{email}", userHandler::deleteAccount)
                     .POST("/login", userHandler::login)
-                    .POST("/upload-dir", userHandler::uploadDir)
+                    .POST("/image-upload", userHandler::uploadDir)
             ;
         }).build();
     }
