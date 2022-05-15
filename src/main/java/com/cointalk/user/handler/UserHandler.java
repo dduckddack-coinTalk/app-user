@@ -4,17 +4,23 @@ import com.cointalk.user.config.JwtProvider;
 import com.cointalk.user.dto.LoginResponseDto;
 import com.cointalk.user.dto.ResponseDto;
 import com.cointalk.user.entity.User;
+import com.cointalk.user.service.AwsUploadService;
 import com.cointalk.user.service.EmailService;
 import com.cointalk.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.nio.file.Paths;
+
 import static org.springframework.web.reactive.function.server.ServerResponse.badRequest;
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
+
 
 @RequiredArgsConstructor
 @Component
@@ -23,6 +29,12 @@ public class UserHandler {
     private final JwtProvider jwtProvider;
     private final UserService userService;
     private final EmailService sendEmailService;
+    private final AwsUploadService awsUploadService;
+
+
+    public Mono<ServerResponse> show(ServerRequest request) {
+        return ok().contentType(MediaType.TEXT_HTML).render("index");
+    }
 
     public Mono<ServerResponse> test(ServerRequest request) {
         return ok().body(Mono.just("hello user"), String.class);
@@ -36,8 +48,8 @@ public class UserHandler {
     public Mono<ServerResponse> getEmailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
         var responseDtoMono = userService.getUser(email).map(user -> {
-            return new ResponseDto("ok", user.getIsAuthentication().toString());
-        })
+                    return new ResponseDto("ok", user.getIsAuthentication().toString());
+                })
                 .switchIfEmpty(Mono.just(new ResponseDto("error", "등록되지 않은 이메일입니다.")));
 
         return ok().body(responseDtoMono, ResponseDto.class);
@@ -110,5 +122,22 @@ public class UserHandler {
         String accessToken = jwtProvider.generateAccessToken(user);
         String refreshToken = jwtProvider.generateRefreshToken(user);
         return new LoginResponseDto("ok", "유저 로그인 성공", accessToken, refreshToken, user);
+    }
+
+    public void saveFile(ServerRequest request) {
+        request.multipartData().map(o -> {
+            Part paringFile = o.get("file").get(0);
+            var oneFile = (FilePart) paringFile;
+            oneFile.transferTo(Paths.get("./src/main/resources/images/" + oneFile.filename())).subscribe();
+            return null;
+        });
+    }
+
+    public Mono<ServerResponse> uploadDir(ServerRequest request) {
+        var a = request.multipartData().flatMap(o -> {
+            Part parsingData = o.get("file").get(0);
+            return awsUploadService.uploadImage(parsingData);
+        });
+        return ok().body(a, Boolean.class);
     }
 }
