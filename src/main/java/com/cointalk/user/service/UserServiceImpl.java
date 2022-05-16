@@ -23,8 +23,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public Mono<Integer> updateUser(User user) {
-        String password = Encryption.encrypt(user.getPassword());
-        return userRepository.updateUser(password, user.getNickName(), user.getEmail());
+        return userRepository.updateUser(user.getPassword(), user.getNickName(), user.getEmail());
     }
 
     public Mono<Integer> deleteUser(String email) {
@@ -40,7 +39,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Mono<ResponseDto> emailAuthentication(String authUrl, String email) {
         return userRepository.findByEmail(email)
-                .switchIfEmpty(userRepository.save(new User(null, email, null, null, null, false)))
+                .switchIfEmpty(userRepository.save(new User(null, email, null, null, null, false, null)))
                 .filter(User::getIsAuthentication)
                 .map(user -> new ResponseDto("ok", "이미 인증된 이메일"))
                 .switchIfEmpty(Mono.defer(() -> {
@@ -62,5 +61,20 @@ public class UserServiceImpl implements UserService {
         return userRepository.updateEmailAuthentication(email)
                 .flatMap(result -> Mono.just("인증 완료 되었습니다"))
                 .onErrorReturn("인증이 실패했습니다.");
+    }
+
+    @Override
+    public User changePasswordInUserEntity(User user, String password) {
+        var encryptPassword = Encryption.encrypt(password);
+        if (!encryptPassword.equals(user.getPassword())) {
+            user.setPassword(encryptPassword);
+        }
+        return user;
+    }
+
+    @Override
+    public User changeNickNameInUserEntity(User user, String nickName) {
+        user.setNickName(nickName);
+        return user;
     }
 }

@@ -4,9 +4,11 @@ import com.cointalk.user.handler.UserHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 import static org.springframework.web.reactive.function.server.RequestPredicates.path;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -28,7 +30,7 @@ public class Router {
                     .POST("/email/{email}/authentication", userHandler::emailAuthentication)
                     .GET("/email/{email}/authentication/confirm", userHandler::confirmEmailAuthentication)
                     .POST("/account", userHandler::createAccount)
-                    .PUT("/account", userHandler::updateAccount)
+                    .PUT("/account", accept(MediaType.MULTIPART_FORM_DATA), userHandler::updateAccount)
                     .DELETE("/account/{email}", userHandler::deleteAccount)
                     .POST("/login", userHandler::login)
                     .POST("/image-upload", userHandler::uploadDir)

@@ -19,4 +19,7 @@ public interface UserService {
 
     Mono<String> updateEmailAuthentication(String email);
 
+    User changePasswordInUserEntity(User user, String password);
+
+    User changeNickNameInUserEntity(User user, String nickName);
 }
