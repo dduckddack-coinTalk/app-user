@@ -2,6 +2,7 @@ package com.cointalk.user.service;
 
 import com.cointalk.user.dto.ResponseDto;
 import com.cointalk.user.entity.User;
+import org.springframework.http.codec.multipart.Part;
 import reactor.core.publisher.Mono;
 
 public interface UserService {
@@ -21,5 +22,5 @@ public interface UserService {
 
     User changePasswordInUserEntity(User user, String password);
 
-    User changeNickNameInUserEntity(User user, String nickName);
+    Mono<User> changeImagePathInUserEntity(User user, Part partData);
 }

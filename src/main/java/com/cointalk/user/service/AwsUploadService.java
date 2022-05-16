@@ -26,9 +26,10 @@ public class AwsUploadService {
     public Mono<Boolean> uploadImage(Part partData) {
         String fileName = ((FilePart) partData).filename();
         return partData.content().map(dataBuffer -> {
+            File tempFile = null;
             try {
                 byte[] byteData = dataBuffer.asInputStream().readAllBytes();
-                File tempFile = new File("temp");
+                tempFile = new File(fileName);
                 FileCopyUtils.copy(byteData, tempFile);
                 PutObjectRequest uploadFileObject = new PutObjectRequest(bucketName, fileName, tempFile)
                         .withCannedAcl(CannedAccessControlList.PublicRead);
@@ -37,6 +38,10 @@ public class AwsUploadService {
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
+            } finally {
+                if (tempFile != null) {
+                    tempFile.delete();
+                }
             }
         }).reduce((v1, v2) -> v1 && v2);
     }

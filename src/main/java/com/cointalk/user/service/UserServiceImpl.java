@@ -5,6 +5,9 @@ import com.cointalk.user.entity.User;
 import com.cointalk.user.repository.UserRepository;
 import com.cointalk.user.util.Encryption;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -12,8 +15,11 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private final AwsUploadService awsUploadService;
     private final EmailService emailService;
     private final UserRepository userRepository;
+    @Value("${cloud.aws.s3.bucket.url}")
+    private String bucketUrl;
 
     public Mono<User> createUser(User user) {
         if (user.getPassword() != null) {
@@ -23,7 +29,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public Mono<Integer> updateUser(User user) {
-        return userRepository.updateUser(user.getPassword(), user.getNickName(), user.getEmail());
+        return userRepository.updateUser(user.getPassword(), user.getNickName(), user.getImagePath(), user.getEmail());
     }
 
     public Mono<Integer> deleteUser(String email) {
@@ -72,9 +78,15 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-    @Override
-    public User changeNickNameInUserEntity(User user, String nickName) {
-        user.setNickName(nickName);
-        return user;
+    public Mono<User> changeImagePathInUserEntity(User user, Part partData) {
+        if (partData == null) {
+            return Mono.empty();
+        }
+        String fileName = ((FilePart) partData).filename();
+        return awsUploadService.uploadImage(partData)
+                .map(isSuccess -> {
+                    if (isSuccess) {user.setImagePath(bucketUrl + fileName);}
+                    return user;
+                });
     }
 }

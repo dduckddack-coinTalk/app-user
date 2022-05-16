@@ -7,7 +7,6 @@ import com.cointalk.user.entity.User;
 import com.cointalk.user.service.AwsUploadService;
 import com.cointalk.user.service.EmailService;
 import com.cointalk.user.service.UserService;
-import com.cointalk.user.util.Encryption;
 import com.cointalk.user.util.PartParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,19 +87,23 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> updateAccount(ServerRequest request) {
-
         var formData = request.multipartData();
         return formData.flatMap(data -> {
-            var email = data.get("email").get(0);
+            var email = data.getFirst("email");
             return PartParser.convertString(email)
                     .flatMap(userService::getUser)
-                    .flatMap(user -> PartParser.getStringFrom(data, "password")
-                                .map(password -> userService.changePasswordInUserEntity(user, password))
-                                .switchIfEmpty(Mono.just(user))
+                    .doOnNext(user -> {
+                        var one = data.getFirst("file");
+                        userService.changeImagePathInUserEntity(user, one).subscribe();
+                    })
+                    .doOnNext(user -> PartParser
+                            .getStringFrom(data, "password")
+                            .map(password -> userService.changePasswordInUserEntity(user, password))
+                            .subscribe()
                     )
-                    .flatMap(user -> PartParser.getStringFrom(data, "nickName")
-                                .map(nickName -> userService.changeNickNameInUserEntity(user, nickName))
-                                .switchIfEmpty(Mono.just(user))
+                    .doOnNext(user -> PartParser
+                            .getStringFrom(data, "nickName")
+                            .doOnNext(user::setNickName).subscribe()
                     )
                     .flatMap(userService::updateUser)
                     .flatMap(o -> {
