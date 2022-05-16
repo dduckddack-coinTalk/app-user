@@ -35,18 +35,23 @@ public class User {
     @Column("is_authentication")
     private Boolean isAuthentication;
 
+    @Column("image_path")
+    private String imagePath;
+
     public User(
             Long id,
             String email,
             String password,
             String nickName,
             LocalDateTime createdAt,
-            Boolean isAuthentication) {
+            Boolean isAuthentication,
+            String imagePath) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.nickName = nickName;
         this.createdAt = createdAt;
         this.isAuthentication = isAuthentication;
+        this.imagePath = imagePath;
     }
 }
