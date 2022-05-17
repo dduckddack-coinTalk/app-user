@@ -18,7 +18,7 @@ public class UserServiceImpl implements UserService {
     private final AwsUploadService awsUploadService;
     private final EmailService emailService;
     private final UserRepository userRepository;
-    @Value("${cloud.aws.s3.bucket.url}")
+    @Value("${cloud.aws.s3.bucket.my.download.url}")
     private String bucketUrl;
 
     public Mono<User> createUser(User user) {
