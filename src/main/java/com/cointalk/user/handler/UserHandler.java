@@ -33,7 +33,7 @@ public class UserHandler {
     private final EmailService sendEmailService;
     private final AwsUploadService awsUploadService;
 
-    @Value("${cloud.aws.s3.bucket.url}")
+    @Value("${cloud.aws.s3.bucket.my.download.url}")
     private String bucketUrl;
 
 
