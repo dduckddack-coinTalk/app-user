@@ -43,6 +43,17 @@ jobs:
           echo spring.mail.password=${{ secrets.MAIL_PASSWORD }} >> ./src/main/resources/application.properties
           echo spring.mail.properties.mail.smtp.auth=true >> ./src/main/resources/application.properties
           echo spring.mail.properties.mail.smtp.starttls.enable=true >> ./src/main/resources/application.properties
+          echo spring.thymeleaf.cache=false >> ./src/main/resources/application.properties
+          echo spring.thymeleaf.enabled=true >> ./src/main/resources/application.properties
+          echo spring.thymeleaf.prefix=classpath:/templates/ >> ./src/main/resources/application.properties
+          echo spring.thymeleaf.suffix=.html >> ./src/main/resources/application.properties
+          echo cloud.aws.s3.bucket=codetalk-user-image >> ./src/main/resources/application.properties
+          echo cloud.aws.credentials.access-key=${{ secrets.CREDENTIALS_ACCESS_KEY }} >> ./src/main/resources/application.properties
+          echo cloud.aws.credentials.secret-key=${{ secrets.CREDENTIALS_SECRET_KEY }} >> ./src/main/resources/application.properties
+          echo cloud.aws.region.static=ap-northeast-2 >> ./src/main/resources/application.properties
+          echo cloud.aws.region.auto=false >> ./src/main/resources/application.properties
+          echo cloud.aws.stack.auto=false >> ./src/main/resources/application.properties
+          echo cloud.aws.s3.bucket.url=s3://codetalk-user-image/images/ >> ./src/main/resources/application.properties
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b

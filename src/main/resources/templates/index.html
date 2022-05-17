@@ -1,7 +1,7 @@
-<!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
+
     <title>Learning Spring Boot: Spring-a-Gram</title>
 </head>
 <body>
@@ -10,11 +10,23 @@
 
 <div>
 
-    <form method="post" enctype="multipart/form-data" action="/user/upload-dir">
+    <form method="post" enctype="multipart/form-data" action="/user/image-upload">
         <p><input type="file" name="file" /></p>
         <p><input type="submit" value="Upload" /></p>
     </form>
 </div>
+<div>
+    <button type="button" onclick="test1()">test1</button>
+</div>
 
 </body>
+<script>
+    function test1() {
+        fetch("http://localhost:8080/user/email/test1@test.com", {
+            method:"GET"
+        })
+        .then(res => res.json())
+        .then(o => console.log(o));
+    }
+</script>
 </html>

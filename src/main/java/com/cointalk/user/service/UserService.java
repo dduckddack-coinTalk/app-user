@@ -2,6 +2,7 @@ package com.cointalk.user.service;
 
 import com.cointalk.user.dto.ResponseDto;
 import com.cointalk.user.entity.User;
+import org.springframework.http.codec.multipart.Part;
 import reactor.core.publisher.Mono;
 
 public interface UserService {
@@ -19,4 +20,7 @@ public interface UserService {
 
     Mono<String> updateEmailAuthentication(String email);
 
+    User changePasswordInUserEntity(User user, String password);
+
+    Mono<User> changeImagePathInUserEntity(User user, Part partData);
 }

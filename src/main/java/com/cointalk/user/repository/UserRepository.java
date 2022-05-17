@@ -17,8 +17,8 @@ public interface UserRepository extends ReactiveCrudRepository<User, Integer> {
     Mono<Integer> deleteByEmail(String email);
 
     @Modifying
-    @Query("UPDATE user SET password = :password , nick_name = :nickName WHERE email = :email")
-    Mono<Integer> updateUser(String password, String nickName, String email);
+    @Query("UPDATE user SET password = :password, nick_name = :nickName , image_path = :imagePath WHERE email = :email")
+    Mono<Integer> updateUser(String password, String nickName, String imagePath ,String email);
 
     @Modifying
     @Query("UPDATE user SET is_authentication = TRUE WHERE email = :email")
