@@ -12,10 +12,12 @@ public class UserInfo {
     private Long id;
     private String email;
     private String nickName;
+    private String imagePath;
 
     public UserInfo(User user) {
         id = user.getId();
         email = user.getEmail();
         nickName = user.getNickName();
+        imagePath = user.getImagePath();
     }
 }
