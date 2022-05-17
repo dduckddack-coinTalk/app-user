@@ -2,7 +2,7 @@ name: pull-request-build
 
 on:
   push:
-    branches: []
+    branches: [chore/*, feature/*, feat/*, fix/*, refactor/*]
 
 permissions:
   contents: read
