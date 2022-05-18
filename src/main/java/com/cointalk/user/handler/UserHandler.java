@@ -9,11 +9,11 @@ import com.cointalk.user.service.EmailService;
 import com.cointalk.user.service.UserService;
 import com.cointalk.user.util.PartParser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -33,10 +33,6 @@ public class UserHandler {
     private final EmailService sendEmailService;
     private final AwsUploadService awsUploadService;
 
-    @Value("${cloud.aws.s3.bucket.my.download.url}")
-    private String bucketUrl;
-
-
     public Mono<ServerResponse> show(ServerRequest request) {
         return ok().contentType(MediaType.TEXT_HTML).render("index");
     }
@@ -52,89 +48,89 @@ public class UserHandler {
 
     public Mono<ServerResponse> getEmailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
-        var responseDtoMono = userService.getUser(email).map(user -> {
-                    return new ResponseDto("ok", user.getIsAuthentication().toString());
-                })
-                .switchIfEmpty(Mono.just(new ResponseDto("error", "등록되지 않은 이메일입니다.")));
+        Mono<ResponseDto> iAuthenticationResponse = userService.getUser(email)
+                .map(user -> user.getIsAuthentication().toString())
+                .map(ResponseDto::ok)
+                .defaultIfEmpty(ResponseDto.error("등록되지 않은 이메일입니다."));
 
-        return ok().body(responseDtoMono, ResponseDto.class);
+        return ok().body(iAuthenticationResponse, ResponseDto.class);
     }
 
     public Mono<ServerResponse> confirmEmailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
-        var result = userService.getUser(email)
-                .flatMap(user -> (user.getIsAuthentication()) ? Mono.just("이미 인증된 이메일 입니다.")
+        Mono<String> emailResponse = userService.getUser(email)
+                .flatMap(user -> (user.getIsAuthentication())
+                        ? Mono.just("이미 인증된 이메일 입니다.")
                         : userService.updateEmailAuthentication(email))
                 .switchIfEmpty(Mono.just("등록되지 않은 이메일 입니다."));
-        return ok().body(result, String.class);
+
+        return ok().body(emailResponse, String.class);
     }
 
     public Mono<ServerResponse> emailAuthentication(ServerRequest request) {
         String email = request.pathVariable("email");
         String authUrl = sendEmailService.generateAuthUrl(request, email);
-        return userService.emailAuthentication(authUrl, email).flatMap(result -> {
-            return ok().body(Mono.just(result), ResponseDto.class);
-        });
+        Mono<ResponseDto> result = userService.emailAuthentication(authUrl, email);
+        return ok().body(result, ResponseDto.class);
     }
 
     public Mono<ServerResponse> createAccount(ServerRequest request) {
         Mono<ResponseDto> resultMono = request.bodyToMono(User.class)
                 .flatMap(userService::createUser)
-                .map(o -> new ResponseDto("ok", "유저 생성 성공"))
-                .onErrorReturn(new ResponseDto("error", "유저 생성 실패"));
+                .thenReturn(ResponseDto.ok("유저 생성 성공"))
+                .onErrorReturn(ResponseDto.error("유저 생성 실패"));
 
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(resultMono, ResponseDto.class);
+        return ok().body(resultMono, ResponseDto.class);
     }
 
     public Mono<ServerResponse> updateAccount(ServerRequest request) {
-        var formData = request.multipartData();
-        return formData.flatMap(data -> {
-            var email = data.getFirst("email");
+        Mono<MultiValueMap<String, Part>> multipartDataMono = request.multipartData();
+        return multipartDataMono.flatMap(multipartData -> {
+            Part email = multipartData.getFirst("email");
             return PartParser.convertString(email)
                     .flatMap(userService::getUser)
                     .doOnNext(user -> {
-                        var one = data.getFirst("file");
-                        userService.changeImagePathInUserEntity(user, one).subscribe();
+                        var fileData = multipartData.getFirst("file");
+                        userService.changeImagePathInUserEntity(user, fileData).subscribe();
                     })
                     .doOnNext(user -> PartParser
-                            .getStringFrom(data, "password")
+                            .getStringFrom(multipartData, "password")
                             .map(password -> userService.changePasswordInUserEntity(user, password))
                             .subscribe()
                     )
                     .doOnNext(user -> PartParser
-                            .getStringFrom(data, "nickName")
-                            .doOnNext(user::setNickName).subscribe()
+                            .getStringFrom(multipartData, "nickName")
+                            .doOnNext(user::setNickName)
+                            .subscribe()
                     )
                     .flatMap(userService::updateUser)
-                    .flatMap(o -> {
-                        if (o == 0) {
-                            return ok().body(Mono.just(new ResponseDto("error", "회원 작업이 되지 않았습니다.")),
-                                    ResponseDto.class);
-                        } else {
-                            return ok().body(Mono.just(new ResponseDto("ok", "회원 작업이 되었습니다.")), ResponseDto.class);
-                        }
-                    })
-                    .switchIfEmpty(badRequest().body(Mono.just(new ResponseDto("error", "존재하지 않는 이메일입니다.")),
-                            ResponseDto.class));
+                    .map(updateCount -> updateCount > 0
+                            ? ResponseDto.ok("회원 작업이 되었습니다.")
+                            : ResponseDto.error("회원 작업이 되지 않았습니다."))
+                    .flatMap(responseDto -> ok().body(Mono.just(responseDto), ResponseDto.class))
+                    .switchIfEmpty(badRequest().body(Mono.just(ResponseDto.error("존재하지 않는 이메일입니다.")), ResponseDto.class));
         });
     }
 
     public Mono<ServerResponse> deleteAccount(ServerRequest request) {
         String email = request.pathVariable("email");
-        var result = userService.deleteUser(email).map(o -> o == 0 ? "삭제 안 되었습니다." : "삭제 되었습니다.").onErrorReturn("삭제 " +
-                "에러 발생!");
+        Mono<String> result = userService
+                .deleteUser(email)
+                .map(o -> o == 0 ? "삭제 되지 않았습니다." : "삭제 되었습니다.")
+                .onErrorReturn("삭제 에러 발생!");
+
         return ok().body(result, String.class);
     }
 
     public Mono<ServerResponse> makeUpdateResponse(User user, Integer updateCount, String existedJwt) {
         if (updateCount == 1) {
-            return ok().contentType(MediaType.APPLICATION_JSON)
+            return ok()
                     .header("Authorization", jwtProvider.generateAccessToken(user))
-                    .body(Mono.just(new ResponseDto("ok", "유저 변경 성공")), ResponseDto.class);
+                    .body(Mono.just(ResponseDto.ok("유저 변경 성공")), ResponseDto.class);
         } else {
-            return badRequest().contentType(MediaType.APPLICATION_JSON)
+            return badRequest()
                     .header("Authorization", existedJwt)
-                    .body(Mono.just(new ResponseDto("error", "유저 변경 실패")), ResponseDto.class);
+                    .body(Mono.just(ResponseDto.error("유저 변경 실패")), ResponseDto.class);
         }
     }
 
@@ -142,29 +138,31 @@ public class UserHandler {
         Mono<ResponseDto> loginResultMono = request.bodyToMono(User.class)
                 .flatMap(userService::login)
                 .map(this::makeLoginResponse)
-                .switchIfEmpty(Mono.just(new ResponseDto("error", "유저 로그인 실패")));
+                .defaultIfEmpty(ResponseDto.error("유저 로그인 실패"));
 
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(loginResultMono, ResponseDto.class);
+        return ok().body(loginResultMono, ResponseDto.class);
     }
 
     public ResponseDto makeLoginResponse(User user) {
-        String accessToken = jwtProvider.generateAccessToken(user);
-        String refreshToken = jwtProvider.generateRefreshToken(user);
-        return new LoginResponseDto("ok", "유저 로그인 성공", accessToken, refreshToken, user);
+        return new LoginResponseDto("ok", "유저 로그인 성공",
+                jwtProvider.generateAccessToken(user), jwtProvider.generateRefreshToken(user), user);
     }
 
     public void saveFile(ServerRequest request) {
         request.multipartData().map(o -> {
             Part paringFile = o.get("file").get(0);
-            var oneFile = (FilePart) paringFile;
+            FilePart oneFile = (FilePart) paringFile;
             oneFile.transferTo(Paths.get("./src/main/resources/images/" + oneFile.filename())).subscribe();
             return null;
         });
     }
 
     public Mono<ServerResponse> uploadDir(ServerRequest request) {
-        var a = request.multipartData().flatMap(o -> {
+        Mono<Boolean> a = request.multipartData().flatMap(o -> {
             Part parsingData = o.get("file").get(0);
+            if (parsingData == null) {
+                return Mono.just(false);
+            }
             return awsUploadService.uploadImage(parsingData);
         });
         return ok().body(a, Boolean.class);
