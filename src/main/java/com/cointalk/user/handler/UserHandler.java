@@ -84,6 +84,7 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> updateAccount(ServerRequest request) {
+        String jwt = request.headers().firstHeader("Authorization");
         Mono<MultiValueMap<String, Part>> multipartDataMono = request.multipartData();
         return multipartDataMono.flatMap(multipartData -> {
             Part email = multipartData.getFirst("email");
@@ -103,11 +104,10 @@ public class UserHandler {
                             .doOnNext(user::setNickName)
                             .subscribe()
                     )
-                    .flatMap(userService::updateUser)
-                    .map(updateCount -> updateCount > 0
-                            ? ResponseDto.ok("회원 작업이 되었습니다.")
-                            : ResponseDto.error("회원 작업이 되지 않았습니다."))
-                    .flatMap(responseDto -> ok().body(Mono.just(responseDto), ResponseDto.class))
+                    .flatMap(user -> userService
+                            .updateUser(user)
+                            .flatMap(updateCount -> makeUpdateResponse(user, updateCount, jwt))
+                    )
                     .switchIfEmpty(badRequest().body(Mono.just(ResponseDto.error("존재하지 않는 이메일입니다.")), ResponseDto.class));
         });
     }
